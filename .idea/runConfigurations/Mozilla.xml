@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Mozilla" type="K2JSConfigurationType" factoryName="Kotlin (JavaScript)">
+    <K2JSConfigurationSettings>
+      <option name="browserFamily" value="FIREFOX" />
+      <option name="generatedFilePath" value="$PROJECT_DIR$" />
+      <option name="pageToOpenFilePath" value="$PROJECT_DIR$/index.html" />
+      <option name="shouldOpenInBrowserAfterTranslation" value="true" />
+    </K2JSConfigurationSettings>
+    <RunnerSettings RunnerId="K2JSBrowserRunner" />
+    <ConfigurationWrapper RunnerId="K2JSBrowserRunner" />
+    <method />
+  </configuration>
+</component>
