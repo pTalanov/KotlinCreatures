@@ -15,7 +15,7 @@ import js.dom.html.HTMLElement
 import js.dom.html.HTMLImageElement
 
 
-fun getImage(path: String): HTMLImageElement {
+fun loadImage(path: String): HTMLImageElement {
     val image = window.document.createElement("img") as HTMLImageElement
     image.src = path
     return image
@@ -75,7 +75,7 @@ class Logo(override var pos: Vector): Shape()
     fun drawLogo(state: CanvasState) {
         size = imageSize * (state.size.x / imageSize.x) * relSize
         // getKotlinLogo() is a 'magic' function here defined only for purposes of demonstration but in fact it just find an element containing the logo
-        state.context.drawImage(getImage("http://kotlin-demo.jetbrains.com/static/images/kotlinlogowobackground.png"), 0, 0,
+        state.context.drawImage(loadImage("http://kotlin-demo.jetbrains.com/static/images/kotlinlogowobackground.png"), 0, 0,
                 imageSize.x.toInt(), imageSize.y.toInt(),
                 position.x.toInt(), position.y.toInt(),
                 size.x.toInt(), size.y.toInt())
