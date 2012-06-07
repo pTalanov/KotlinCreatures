@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Mozilla" type="K2JSConfigurationType" factoryName="Kotlin (JavaScript)">
+  <configuration default="false" name="Chrome" type="K2JSConfigurationType" factoryName="Kotlin (JavaScript)">
     <K2JSConfigurationSettings>
-      <option name="browserFamily" value="FIREFOX" />
+      <option name="browserFamily" value="CHROME" />
       <option name="generatedFilePath" value="$PROJECT_DIR$/production" />
       <option name="pageToOpenFilePath" value="$PROJECT_DIR$/production/index.html" />
       <option name="shouldOpenInBrowserAfterTranslation" value="true" />
