@@ -1,103 +1,7 @@
 (function(){
   'use strict';
   var classes = function(){
-    var tmp$0 = Kotlin.createClass({initialize:function(x, y){
-      this.$x = x;
-      this.$y = y;
-    }
-    , get_x:function(){
-      return this.$x;
-    }
-    , get_y:function(){
-      return this.$y;
-    }
-    , plus:function(v){
-      {
-        return creatures.v(this.get_x() + v.get_x(), this.get_y() + v.get_y());
-      }
-    }
-    , minus:function(){
-      {
-        return creatures.v(-this.get_x(), -this.get_y());
-      }
-    }
-    , minus$0:function(v){
-      {
-        return creatures.v(this.get_x() - v.get_x(), this.get_y() - v.get_y());
-      }
-    }
-    , times:function(koef){
-      {
-        return creatures.v(this.get_x() * koef, this.get_y() * koef);
-      }
-    }
-    , distanceTo:function(v){
-      {
-        return Math.sqrt(this.minus$0(v).get_sqr());
-      }
-    }
-    , rotatedBy:function(theta){
-      {
-        var sin = Math.sin(theta);
-        var cos = Math.cos(theta);
-        return creatures.v(this.get_x() * cos - this.get_y() * sin, this.get_x() * sin + this.get_y() * cos);
-      }
-    }
-    , isInRect:function(topLeft, size){
-      {
-        return this.get_x() >= topLeft.get_x() && this.get_x() <= topLeft.get_x() + size.get_x() && this.get_y() >= topLeft.get_y() && this.get_y() <= topLeft.get_y() + size.get_y();
-      }
-    }
-    , get_sqr:function(){
-      {
-        return this.get_x() * this.get_x() + this.get_y() * this.get_y();
-      }
-    }
-    , get_normalized:function(){
-      {
-        return this.times(1 / Math.sqrt(this.get_sqr()));
-      }
-    }
-    });
-    var tmp$1 = Kotlin.createClass({initialize:function(context){
-      this.$context = context;
-      this.$gradients = new Kotlin.ArrayList;
-      this.$current = 0;
-      {
-        this.newColorStops([[0, '#F59898'], [0.5, '#F57373'], [1, '#DB6B6B']]);
-        this.newColorStops([[0.39, 'rgb(140,167,209)'], [0.7, 'rgb(104,139,209)'], [0.85, 'rgb(67,122,217)']]);
-        this.newColorStops([[0, 'rgb(255,222,255)'], [0.5, 'rgb(255,185,222)'], [1, 'rgb(230,154,185)']]);
-        this.newColorStops([[0, 'rgb(255,209,114)'], [0.5, 'rgb(255,174,81)'], [1, 'rgb(241,145,54)']]);
-        this.newColorStops([[0, 'rgb(132,240,135)'], [0.5, 'rgb(91,240,96)'], [1, 'rgb(27,245,41)']]);
-        this.newColorStops([[0, 'rgb(250,147,250)'], [0.5, 'rgb(255,80,255)'], [1, 'rgb(250,0,217)']]);
-      }
-    }
-    , get_context:function(){
-      return this.$context;
-    }
-    , get_gradients:function(){
-      return this.$gradients;
-    }
-    , get_current:function(){
-      return this.$current;
-    }
-    , set_current:function(tmp$0){
-      this.$current = tmp$0;
-    }
-    , newColorStops:function(colorStops){
-      {
-        this.get_gradients().add(colorStops);
-      }
-    }
-    , getNext:function(){
-      {
-        var result = this.get_gradients().get(this.get_current());
-        this.set_current((this.get_current() + 1) % this.get_gradients().size());
-        return result;
-      }
-    }
-    });
-    var tmp$2 = Kotlin.createClass({initialize:function(canvas){
+    var tmp$0 = Kotlin.createClass({initialize:function(canvas){
       this.$canvas = canvas;
       this.$width = this.get_canvas().width;
       this.$height = this.get_canvas().height;
@@ -121,7 +25,7 @@
                 var shape = tmp$0.next();
                 {
                   if (shape.contains(mousePos)) {
-                    tmp$0_0.set_dragOff(mousePos.minus$0(shape.get_pos()));
+                    tmp$0_0.set_dragOff(mousePos.minus(shape.get_pos()));
                     shape.set_selected(true);
                     tmp$0_0.set_selection(shape);
                     break;
@@ -136,7 +40,7 @@
         $(this.get_canvas()).mousemove((tmp$1 = this , function(it){
           {
             if (tmp$1.get_selection() != null) {
-              Kotlin.sure(tmp$1.get_selection()).set_pos(tmp$1.mousePos_0(it).minus$0(tmp$1.get_dragOff()));
+              (tmp$1.get_selection() != null?tmp$1.get_selection():Kotlin.throwNPE()).set_pos(tmp$1.mousePos_0(it).minus(tmp$1.get_dragOff()));
               tmp$1.set_valid(false);
             }
           }
@@ -146,7 +50,7 @@
         $(this.get_canvas()).mouseup((tmp$2 = this , function(it){
           {
             if (tmp$2.get_selection() != null) {
-              Kotlin.sure(tmp$2.get_selection()).set_selected(false);
+              (tmp$2.get_selection() != null?tmp$2.get_selection():Kotlin.throwNPE()).set_selected(false);
             }
             tmp$2.set_selection(null);
             tmp$2.set_valid(false);
@@ -226,11 +130,11 @@
         var offset = new creatures.Vector(0, 0);
         var element = this.get_canvas();
         while (element != null) {
-          var el = Kotlin.sure(element);
+          var el = element != null?element:Kotlin.throwNPE();
           offset = offset.plus(new creatures.Vector(el.offsetLeft, el.offsetTop));
           element = el.offsetParent;
         }
-        return (new creatures.Vector(e.pageX, e.pageY)).minus$0(offset);
+        return (new creatures.Vector(e.pageX, e.pageY)).minus(offset);
       }
     }
     , addShape:function(shape){
@@ -242,10 +146,10 @@
     , clear:function(){
       {
         this.get_context().fillStyle = '#FFFFFF';
-        this.get_context().fillRect(0, 0, Math.floor(this.get_width()), Math.floor(this.get_height()));
+        this.get_context().fillRect(0, 0, this.get_width(), this.get_height());
         this.get_context().strokeStyle = '#000000';
         this.get_context().lineWidth = 4;
-        this.get_context().strokeRect(0, 0, Math.floor(this.get_width()), Math.floor(this.get_height()));
+        this.get_context().strokeRect(0, 0, this.get_width(), this.get_height());
       }
     }
     , draw:function(){
@@ -268,7 +172,7 @@
       }
     }
     });
-    var tmp$3 = Kotlin.createClass({initialize:function(){
+    var tmp$1 = Kotlin.createClass({initialize:function(){
       this.$selected = false;
     }
     , draw:function(state){
@@ -307,7 +211,7 @@
       }
     }
     });
-    var tmp$4 = Kotlin.createClass(tmp$3, {initialize:function(pos, state){
+    var tmp$2 = Kotlin.createClass(tmp$1, {initialize:function(pos, state){
       this.$pos = pos;
       this.$state = state;
       this.super_init();
@@ -341,7 +245,7 @@
     , get_position:function(){
       var tmp$0;
       if (this.get_selected())
-        tmp$0 = this.get_pos().minus$0(this.get_shadowOffset());
+        tmp$0 = this.get_pos().minus(this.get_shadowOffset());
       else 
         tmp$0 = this.get_pos();
       {
@@ -350,7 +254,7 @@
     }
     , get_directionToLogo:function(){
       {
-        return creatures.get_Kotlin().get_centre().minus$0(this.get_position()).get_normalized();
+        return creatures.get_Kotlin().get_centre().minus(this.get_position()).get_normalized();
       }
     }
     , contains:function(mousePos){
@@ -420,17 +324,17 @@
     }
     , tailPath:function(context){
       {
-        var tailDirection = this.get_directionToLogo().minus();
+        var tailDirection = this.get_directionToLogo().minus$0();
         var tailPos = this.get_position().plus(tailDirection.times(this.get_radius()).times(1));
         var tailSize = this.get_radius() * 1.6;
         var angle = Math.PI / 6;
         var p1 = tailPos.plus(tailDirection.rotatedBy(angle).times(tailSize));
         var p2 = tailPos.plus(tailDirection.rotatedBy(-angle).times(tailSize));
         var middlePoint = this.get_position().plus(tailDirection.times(this.get_radius()).times(1));
-        context.moveTo(Math.floor(tailPos.get_x()), Math.floor(tailPos.get_y()));
-        context.lineTo(Math.floor(p1.get_x()), Math.floor(p1.get_y()));
+        context.moveTo(tailPos.get_x(), tailPos.get_y());
+        context.lineTo(p1.get_x(), p1.get_y());
         context.quadraticCurveTo(middlePoint.get_x(), middlePoint.get_y(), p2.get_x(), p2.get_y());
-        context.lineTo(Math.floor(tailPos.get_x()), Math.floor(tailPos.get_y()));
+        context.lineTo(tailPos.get_x(), tailPos.get_y());
       }
     }
     , drawEye:function(context){
@@ -465,7 +369,7 @@
       }
     }
     });
-    var tmp$5 = Kotlin.createClass(tmp$3, {initialize:function(pos){
+    var tmp$3 = Kotlin.createClass(tmp$1, {initialize:function(pos){
       this.$pos = pos;
       this.super_init();
       this.$relSize = 0.25;
@@ -497,7 +401,7 @@
     , get_position:function(){
       var tmp$0;
       if (this.get_selected())
-        tmp$0 = this.get_pos().minus$0(this.get_shadowOffset());
+        tmp$0 = this.get_pos().minus(this.get_shadowOffset());
       else 
         tmp$0 = this.get_pos();
       {
@@ -507,7 +411,7 @@
     , drawLogo:function(state){
       {
         this.set_size(this.get_imageSize().times(state.get_size().get_x() / this.get_imageSize().get_x()).times(this.get_relSize()));
-        state.get_context().drawImage(creatures.loadImage('http://kotlin-demo.jetbrains.com/static/images/kotlinlogowobackground.png'), 0, 0, Math.floor(this.get_imageSize().get_x()), Math.floor(this.get_imageSize().get_y()), Math.floor(this.get_position().get_x()), Math.floor(this.get_position().get_y()), Math.floor(this.get_size().get_x()), Math.floor(this.get_size().get_y()));
+        state.get_context().drawImage(creatures.loadImage('http://kotlin-demo.jetbrains.com/static/images/kotlinlogowobackground.png'), 0, 0, this.get_imageSize().get_x(), this.get_imageSize().get_y(), this.get_position().get_x(), this.get_position().get_y(), this.get_size().get_x(), this.get_size().get_y());
       }
     }
     , draw:function(state){
@@ -538,7 +442,103 @@
       }
     }
     });
-    return {Logo:tmp$5, RadialGradientGenerator:tmp$1, CanvasState:tmp$2, Shape:tmp$3, Creature:tmp$4, Vector:tmp$0};
+    var tmp$4 = Kotlin.createClass({initialize:function(x, y){
+      this.$x = x;
+      this.$y = y;
+    }
+    , get_x:function(){
+      return this.$x;
+    }
+    , get_y:function(){
+      return this.$y;
+    }
+    , plus:function(v){
+      {
+        return creatures.v(this.get_x() + v.get_x(), this.get_y() + v.get_y());
+      }
+    }
+    , minus$0:function(){
+      {
+        return creatures.v(-this.get_x(), -this.get_y());
+      }
+    }
+    , minus:function(v){
+      {
+        return creatures.v(this.get_x() - v.get_x(), this.get_y() - v.get_y());
+      }
+    }
+    , times:function(koef){
+      {
+        return creatures.v(this.get_x() * koef, this.get_y() * koef);
+      }
+    }
+    , distanceTo:function(v){
+      {
+        return Math.sqrt(this.minus(v).get_sqr());
+      }
+    }
+    , rotatedBy:function(theta){
+      {
+        var sin = Math.sin(theta);
+        var cos = Math.cos(theta);
+        return creatures.v(this.get_x() * cos - this.get_y() * sin, this.get_x() * sin + this.get_y() * cos);
+      }
+    }
+    , isInRect:function(topLeft, size){
+      {
+        return (new Kotlin.NumberRange(topLeft.get_x(), topLeft.get_x() + size.get_x() - topLeft.get_x() + 1, false)).contains(this.get_x()) && (new Kotlin.NumberRange(topLeft.get_y(), topLeft.get_y() + size.get_y() - topLeft.get_y() + 1, false)).contains(this.get_y());
+      }
+    }
+    , get_sqr:function(){
+      {
+        return this.get_x() * this.get_x() + this.get_y() * this.get_y();
+      }
+    }
+    , get_normalized:function(){
+      {
+        return this.times(1 / Math.sqrt(this.get_sqr()));
+      }
+    }
+    });
+    var tmp$5 = Kotlin.createClass({initialize:function(context){
+      this.$context = context;
+      this.$gradients = new Kotlin.ArrayList;
+      this.$current = 0;
+      {
+        this.newColorStops([[0, '#F59898'], [0.5, '#F57373'], [1, '#DB6B6B']]);
+        this.newColorStops([[0.39, 'rgb(140,167,209)'], [0.7, 'rgb(104,139,209)'], [0.85, 'rgb(67,122,217)']]);
+        this.newColorStops([[0, 'rgb(255,222,255)'], [0.5, 'rgb(255,185,222)'], [1, 'rgb(230,154,185)']]);
+        this.newColorStops([[0, 'rgb(255,209,114)'], [0.5, 'rgb(255,174,81)'], [1, 'rgb(241,145,54)']]);
+        this.newColorStops([[0, 'rgb(132,240,135)'], [0.5, 'rgb(91,240,96)'], [1, 'rgb(27,245,41)']]);
+        this.newColorStops([[0, 'rgb(250,147,250)'], [0.5, 'rgb(255,80,255)'], [1, 'rgb(250,0,217)']]);
+      }
+    }
+    , get_context:function(){
+      return this.$context;
+    }
+    , get_gradients:function(){
+      return this.$gradients;
+    }
+    , get_current:function(){
+      return this.$current;
+    }
+    , set_current:function(tmp$0){
+      this.$current = tmp$0;
+    }
+    , newColorStops:function(colorStops){
+      {
+        this.get_gradients().add(colorStops);
+      }
+    }
+    , getNext:function(){
+      {
+        var result = this.get_gradients().get(this.get_current());
+        this.set_current((this.get_current() + 1) % this.get_gradients().size());
+        return result;
+      }
+    }
+    });
+    return {RadialGradientGenerator:tmp$5, Shape:tmp$1, Creature:tmp$2, Logo:tmp$3, Vector:tmp$4, CanvasState:tmp$0};
   }
   ();
   var kotlin = Kotlin.createNamespace({initialize:function(){
@@ -556,11 +556,19 @@
     this.$Kotlin = new creatures.Logo(creatures.v(250, 75));
     this.$gradientGenerator = null;
   }
+  , get_Kotlin:function(){
+    return this.$Kotlin;
+  }
   , loadImage:function(path){
     {
       var image = window.document.createElement('img');
       image.src = path;
       return image;
+    }
+  }
+  , v:function(x, y){
+    {
+      return new creatures.Vector(x, y);
     }
   }
   , get_canvas:function(){
@@ -573,20 +581,12 @@
       return creatures.get_canvas().getContext('2d') != null?creatures.get_canvas().getContext('2d'):Kotlin.throwNPE();
     }
   }
-  , get_Kotlin:function(){
-    return this.$Kotlin;
-  }
   , get_gradientGenerator:function(){
     {
       if (this.$gradientGenerator == null) {
         this.$gradientGenerator = new creatures.RadialGradientGenerator(creatures.get_context());
       }
       return this.$gradientGenerator;
-    }
-  }
-  , v:function(x, y){
-    {
-      return new creatures.Vector(x, y);
     }
   }
   , main:function(args){
@@ -621,7 +621,7 @@
       return result;
     }
   }
-  }, {Shape:classes.Shape, Logo:classes.Logo, Creature:classes.Creature, CanvasState:classes.CanvasState, RadialGradientGenerator:classes.RadialGradientGenerator, Vector:classes.Vector});
+  }, {Logo:classes.Logo, RadialGradientGenerator:classes.RadialGradientGenerator, Vector:classes.Vector, Shape:classes.Shape, CanvasState:classes.CanvasState, Creature:classes.Creature});
   Kotlin.defs.creatures = creatures;
   kotlin.initialize();
   creatures.initialize();
