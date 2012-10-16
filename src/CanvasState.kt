@@ -5,7 +5,6 @@ import js.jquery.*
 import js.dom.html5.CanvasGradient
 import js.dom.html5.HTMLCanvasElement
 import java.util.ArrayList
-import java.util.List
 import js.dom.html.window
 import js.dom.html.HTMLElement
 import js.dom.html.HTMLImageElement

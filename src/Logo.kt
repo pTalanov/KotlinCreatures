@@ -24,9 +24,10 @@ class Logo(override var pos: Vector): Shape()
         val context = state.context
         if (selected) {
             // using helper we defined in Shape class
-            context.shadowed(shadowOffset, 0.2) {
+            //TODO uncomment when KT-2740 fixed
+//            context.shadowed(shadowOffset, 0.2) {
                 drawLogo(state)
-            }
+//            }
         } else {
             drawLogo(state)
         }

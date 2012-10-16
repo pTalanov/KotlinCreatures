@@ -6,1131 +6,805 @@
  *
  *--------------------------------------------------------------------------*/
 var Kotlin = {};
-
-(function () {
-    "use strict";
-    var emptyFunction = function () {
-    };
-
-    function $A(iterable) {
-        if (!iterable) return [];
-        if ('toArray' in Object(iterable)) return iterable.toArray();
-        var length = iterable.length || 0, results = new Array(length);
-        while (length--) results[length] = iterable[length];
-        return results;
+(function() {
+    function e(c, d) {
+        for(var a in d) {
+            d.hasOwnProperty(a) && (c[a] = d[a])
+        }
     }
-
-    (function () {
-        function extend(destination, source) {
-            for (var property in source) {
-                destination[property] = source[property];
-            }
-            return destination;
-        }
-
-        function keys(object) {
-            var results = [];
-            for (var property in object) {
-                if (object.hasOwnProperty(property)) {
-                    results.push(property);
-                }
-            }
-            return results;
-        }
-
-        function values(object) {
-            var results = [];
-            for (var property in object) {
-                results.push(object[property]);
-            }
-            return results;
-        }
-
-        extend(Object, {
-            extend: extend,
-            keys: Object.keys || keys,
-            values: values
-        });
-    })();
-
-    Object.extend(Function.prototype, (function () {
-        var slice = Array.prototype.slice;
-
-        function update(array, args) {
-            var arrayLength = array.length, length = args.length;
-            while (length--) array[arrayLength + length] = args[length];
-            return array;
-        }
-
-        function merge(array, args) {
-            array = slice.call(array, 0);
-            return update(array, args);
-        }
-
-        function argumentNames() {
-            var names = this.toString().match(/^[\s\(]*function[^(]*\(([^)]*)\)/)[1]
-                .replace(/\/\/.*?[\r\n]|\/\*(?:.|[\r\n])*?\*\//g, '')
-                .replace(/\s+/g, '').split(',');
-            return names.length == 1 && !names[0] ? [] : names;
-        }
-
-        function bind(context) {
-            if (arguments.length < 2 && Object.isUndefined(arguments[0])) return this;
-            var __method = this, args = slice.call(arguments, 1);
-            return function () {
-                var a = merge(args, arguments);
-                return __method.apply(context, a);
-            };
-        }
-
-        function bindAsEventListener(context) {
-            var __method = this, args = slice.call(arguments, 1);
-            return function (event) {
-                var a = update([event || window.event], args);
-                return __method.apply(context, a);
-            };
-        }
-
-        function wrap(wrapper) {
-            var __method = this;
-            return function () {
-                var a = update([__method.bind(this)], arguments);
-                return wrapper.apply(this, a);
-            };
-        }
-
-        return {
-            argumentNames: argumentNames,
-            bind: bind,
-            bindAsEventListener: bindAsEventListener,
-            wrap: wrap
-        };
-    })());
-
-    Kotlin.isType = function (object, klass) {
-        if (object === null) {
-            return false;
-        }
-
-        var current = object.get_class();
-        while (current !== klass) {
-            if (current === null) {
-                return false;
-            }
-            current = current.superclass;
-        }
-        return true;
+    var f = function() {
     };
-
-    Kotlin.createTrait = (function () {
-        function add(object, source) {
-            var properties = Object.keys(source);
-            for (var i = 0, length = properties.length; i < length; i++) {
-                var property = properties[i];
-                object[property] = source[property];
-            }
-            return this;
+    Kotlin.keys = Object.keys || function(c) {
+        var d = [], a = 0, b;
+        for(b in c) {
+            c.hasOwnProperty(b) && (d[a++] = b)
         }
-
-        return function () {
-            var result = {};
-            for (var i = 0, length = arguments.length; i < length; i++) {
-                add(result, arguments[i]);
-            }
-            return result;
-        }
-    })();
-
-    Kotlin.createNamespace = function () {
-        return Kotlin.createTrait.apply(null, arguments);
+        return d
     };
-
-    Kotlin.createClass = (function () {
-        var METHODS = {addMethods: addMethods};
-
-        function subclass() {
+    Kotlin.argumentsToArrayLike = function(c) {
+        for(var d = c.length, a = Array(d);d--;) {
+            a[d] = c[d]
         }
-
-        function create() {
-            var parent = null, properties = $A(arguments);
-            if (typeof (properties[0]) == "function") {
-                parent = properties.shift();
-            }
-
-            function klass() {
-                this.initializing = klass;
-                if (this.initialize) {
-                    this.initialize.apply(this, arguments);
-                }
-            }
-
-            Object.extend(klass, METHODS);
-            klass.superclass = parent;
-            klass.subclasses = [];
-
-            if (parent) {
-                subclass.prototype = parent.prototype;
-                klass.prototype = new subclass();
-                parent.subclasses.push(klass);
-            }
-
-            klass.addMethods(
-                {
-                    get_class: function () {
-                        return klass;
-                    }
-                });
-
-            if (parent !== null) {
-                klass.addMethods(
-                    {
-                        super_init: function () {
-                            this.initializing = this.initializing.superclass;
-                            this.initializing.prototype.initialize.apply(this, arguments);
-                        }
-                    });
-            }
-
-            for (var i = 0, length = properties.length; i < length; i++) {
-                klass.addMethods(properties[i]);
-            }
-
-            if (!klass.prototype.initialize) {
-                klass.prototype.initialize = emptyFunction;
-            }
-
-            klass.prototype.constructor = klass;
-            return klass;
+        return a
+    };
+    Kotlin.isType = function(c, d) {
+        if(null === c || void 0 === c) {
+            return!1
         }
-
-        function addMethods(source) {
-            var ancestor = this.superclass && this.superclass.prototype,
-                properties = Object.keys(source);
-
-
-            for (var i = 0, length = properties.length; i < length; i++) {
-                var property = properties[i], value = source[property];
-                if (ancestor && (typeof (value) == "function") &&
-                    value.argumentNames()[0] == "$super") {
-                    var method = value;
-                    value = (function (m) {
-                        return function () {
-                            return ancestor[m].apply(this, arguments);
-                        };
-                    })(property).wrap(method);
-
-                }
-                this.prototype[property] = value;
+        for(var a = c.get_class();a !== d;) {
+            if(null === a) {
+                return!1
             }
-
-            return this;
+            a = a.superclass
         }
-
-        return create;
-    })();
-
+        return!0
+    };
+    Kotlin.createTrait = function() {
+        return function() {
+            for(var c = arguments[0], d = 1, a = arguments.length;d < a;d++) {
+                e(c, arguments[d])
+            }
+            return c
+        }
+    }();
+    Kotlin.definePackage = function(c) {
+        return null === c ? {} : c
+    };
+    Kotlin.createClass = function() {
+        function c() {
+        }
+        function d(a) {
+            e(this.prototype, a);
+            return this
+        }
+        return function() {
+            function a() {
+                this.initializing = a;
+                this.initialize && this.initialize.apply(this, arguments)
+            }
+            var b = null, g = Kotlin.argumentsToArrayLike(arguments);
+            "function" == typeof g[0] && (b = g.shift());
+            a.addMethods = d;
+            a.superclass = b;
+            a.subclasses = [];
+            b && (c.prototype = b.prototype, a.prototype = new c, b.subclasses.push(a));
+            a.addMethods({get_class:function() {
+                return a
+            }});
+            null !== b && a.addMethods({super_init:function() {
+                this.initializing = this.initializing.superclass;
+                this.initializing.prototype.initialize.apply(this, arguments)
+            }});
+            for(var b = 0, h = g.length;b < h;b++) {
+                a.addMethods(g[b])
+            }
+            a.prototype.initialize || (a.prototype.initialize = f);
+            return a.prototype.constructor = a
+        }
+    }();
     Kotlin.$createClass = Kotlin.createClass;
-
-    Kotlin.$new = function (f) {
-        var o = {'__proto__': f.prototype};
-        return function () {
-            f.apply(o, arguments);
-            return o;
-        };
-    };
-
-    Kotlin.createObject = function () {
-        var singletonClass = Kotlin.createClass.apply(null, arguments);
-        return new singletonClass();
-    };
-})();
-
-/**
- * Copyright 2010 Tim Down.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-(function () {
-    "use strict";
-
-    Kotlin.equals = function (obj1, obj2) {
-        if (typeof obj1 == "object") {
-            if (obj1.equals !== undefined) {
-                return obj1.equals(obj2);
-            }
+    Kotlin.$new = function(c) {
+        var d = {__proto__:c.prototype};
+        return function() {
+            c.apply(d, arguments);
+            return d
         }
-        return (obj1 === obj2);
     };
-
-    Kotlin.defs = {};
-    Kotlin.Exceptions = {};
+    Kotlin.createObject = function() {
+        return new (Kotlin.createClass.apply(null, arguments))
+    };
+    Kotlin.defineModule = function(c, d) {
+        if(c in Kotlin.modules) {
+            throw Kotlin.$new(Kotlin.IllegalArgumentException)();
+        }
+        Kotlin.modules[c] = d
+    }
+})();
+String.prototype.startsWith = function(e) {
+    return 0 === this.indexOf(e)
+};
+String.prototype.endsWith = function(e) {
+    return-1 !== this.indexOf(e, this.length - e.length)
+};
+String.prototype.contains = function(e) {
+    return-1 !== this.indexOf(e)
+};
+var kotlin = {set:function(e, f, c) {
+    return e.put(f, c)
+}};
+(function() {
+    function e(a) {
+        return function() {
+            throw new TypeError(void 0 !== a ? "Function " + a + " is abstract" : "Function is abstract");
+        }
+    }
+    Kotlin.equals = function(a, b) {
+        if(null === a || void 0 === a) {
+            return null === b
+        }
+        if(a instanceof Array) {
+            if(!(b instanceof Array) || a.length != b.length) {
+                return!1
+            }
+            for(var c = 0;c < a.length;c++) {
+                if(!Kotlin.equals(a[c], b[c])) {
+                    return!1
+                }
+            }
+            return!0
+        }
+        return"object" == typeof a && void 0 !== a.equals ? a.equals(b) : a === b
+    };
+    Kotlin.array = function(a) {
+        return null === a || void 0 === a ? [] : a.slice()
+    };
+    Kotlin.intUpto = function(a, b) {
+        return Kotlin.$new(Kotlin.NumberRange)(a, b - a + 1, !1)
+    };
+    Kotlin.intDownto = function(a, b) {
+        return Kotlin.$new(Kotlin.NumberRange)(a, a - b + 1, !0)
+    };
+    Kotlin.modules = {};
     Kotlin.Exception = Kotlin.$createClass();
     Kotlin.RuntimeException = Kotlin.$createClass(Kotlin.Exception);
-    Kotlin.Exceptions.IndexOutOfBounds = Kotlin.$createClass(Kotlin.Exception);
-    Kotlin.Exceptions.NullPointerException = Kotlin.$createClass(Kotlin.Exception);
-    Kotlin.Exceptions.NoSuchElementException = Kotlin.$createClass(Kotlin.Exception);
-    Kotlin.Exceptions.IllegalArgumentException = Kotlin.$createClass(Kotlin.Exception);
-    Kotlin.Exceptions.IllegalStateException = Kotlin.$createClass(Kotlin.Exception);
-    Kotlin.Exceptions.IndexOutOfBoundsException = Kotlin.$createClass(Kotlin.Exception);
-    Kotlin.Exceptions.UnsupportedOperationException = Kotlin.$createClass(Kotlin.Exception);
-
+    Kotlin.IndexOutOfBounds = Kotlin.$createClass(Kotlin.Exception);
+    Kotlin.NullPointerException = Kotlin.$createClass(Kotlin.Exception);
+    Kotlin.NoSuchElementException = Kotlin.$createClass(Kotlin.Exception);
+    Kotlin.IllegalArgumentException = Kotlin.$createClass(Kotlin.Exception);
+    Kotlin.IllegalStateException = Kotlin.$createClass(Kotlin.Exception);
+    Kotlin.IndexOutOfBoundsException = Kotlin.$createClass(Kotlin.Exception);
+    Kotlin.UnsupportedOperationException = Kotlin.$createClass(Kotlin.Exception);
+    Kotlin.IOException = Kotlin.$createClass(Kotlin.Exception);
     Kotlin.throwNPE = function() {
-        throw Kotlin.$new(Kotlin.Exceptions.NullPointerException)();
+        throw Kotlin.$new(Kotlin.NullPointerException)();
     };
-
-    Kotlin.AbstractList = Kotlin.$createClass({
-            set:function (index, value) {
-                throw Kotlin.$new(Kotlin.Exceptions.UnsupportedOperationException)();
-            },
-            iterator:function () {
-                return Kotlin.$new(Kotlin.ArrayIterator)(this);
-            },
-            isEmpty:function () {
-                return (this.size() === 0);
-            },
-            add:function (element) {
-                throw Kotlin.$new(Kotlin.Exceptions.UnsupportedOperationException)();
-            },
-            addAll:function (collection) {
-                var it = collection.iterator();
-                while (it.get_hasNext()) {
-                    this.add(it.next());
-                }
-            },
-            remove:function(value) {
-                for (var i = 0; i < this.$size; ++i) {
-                    if (this.array[i] == value) {
-                        this.removeByIndex(i);
-                        return;
-                    }
-                }
-            },
-            removeByIndex:function (index) {
-                throw Kotlin.$new(Kotlin.Exceptions.UnsupportedOperationException)();
-            },
-            clear:function () {
-                throw Kotlin.$new(Kotlin.Exceptions.UnsupportedOperationException)();
-            },
-            contains:function (obj) {
-                for (var i = 0; i < this.$size; ++i) {
-                    if (Kotlin.equals(this.array[i], obj)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
-
-    Kotlin.ArrayList = Kotlin.$createClass({
-        initialize:function () {
-            this.array = [];
-            this.$size = 0;
-        },
-        get:function (index) {
-            if ((index < 0) || (index >= this.$size)) {
-                throw Kotlin.Exceptions.IndexOutOfBounds;
-            }
-            return (this.array)[index];
-        },
-        set:function (index, value) {
-            if ((index < 0) || (index >= this.$size)) {
-                throw Kotlin.Exceptions.IndexOutOfBounds;
-            }
-            (this.array)[index] = value;
-        },
-        size:function () {
-            return this.$size;
-        },
-        iterator:function () {
-            return Kotlin.$new(Kotlin.ArrayIterator)(this);
-        },
-        isEmpty:function () {
-            return (this.$size === 0);
-        },
-        add:function (element) {
-            this.array[this.$size++] = element;
-        },
-        addAll:function (collection) {
-            var it = collection.iterator();
-            while (it.get_hasNext()) {
-                this.add(it.next());
-            }
-        },
-        remove:function(value) {
-            for (var i = 0; i < this.$size; ++i) {
-                if (this.array[i] == value) {
-                    this.removeByIndex(i);
-                    return;
-                }
-            }
-        },
-        removeByIndex:function (index) {
-            for (var i = index; i < this.$size - 1; ++i) {
-                this.array[i] = this.array[i + 1];
-            }
-            this.$size--;
-        },
-        clear:function () {
-            this.array = [];
-            this.$size = 0;
-        },
-        contains:function (obj) {
-            for (var i = 0; i < this.$size; ++i) {
-                if (Kotlin.equals(this.array[i], obj)) {
-                    return true;
-                }
-            }
-            return false;
+    Kotlin.Iterator = Kotlin.$createClass({initialize:function() {
+    }, next:e("Iterator#next"), hasNext:e("Iterator#hasNext")});
+    var f = Kotlin.$createClass(Kotlin.Iterator, {initialize:function(a) {
+        this.array = a;
+        this.size = a.length;
+        this.index = 0
+    }, next:function() {
+        return this.array[this.index++]
+    }, get_hasNext:function() {
+        return this.index < this.size
+    }, hasNext:function() {
+        return this.index < this.size
+    }}), c = Kotlin.$createClass(f, {initialize:function(a) {
+        this.list = a;
+        this.size = a.size();
+        this.index = 0
+    }, next:function() {
+        return this.list.get(this.index++)
+    }, get_hasNext:function() {
+        return this.index < this.size
+    }});
+    Kotlin.Collection = Kotlin.$createClass();
+    Kotlin.AbstractList = Kotlin.$createClass(Kotlin.Collection, {iterator:function() {
+        return Kotlin.$new(c)(this)
+    }, isEmpty:function() {
+        return 0 === this.size()
+    }, addAll:function(a) {
+        for(var a = a.iterator(), b = this.$size;0 < b--;) {
+            this.add(a.next())
         }
-    });
-
-
-    Kotlin.parseInt = function (str) {
-        return parseInt(str, 10);
-    }
-    ;
-
-    Kotlin.safeParseInt = function(str) {
-        var r = parseInt(str, 10);
-        return isNaN(r) ? null : r;
-    };
-
-    Kotlin.safeParseDouble = function(str) {
-        var r = parseFloat(str, 10);
-        return isNaN(r) ? null : r;
-    };
-
-    Kotlin.System = function () {
-        var output = "";
-
-        var print = function (obj) {
-            if (obj !== undefined) {
-                if (obj === null || typeof obj !== "object") {
-                    output += obj;
-                }
-                else {
-                    output += obj.toString();
+    }, remove:function(a) {
+        a = this.indexOf(a);
+        -1 !== a && this.removeAt(a)
+    }, contains:function(a) {
+        return-1 !== this.indexOf(a)
+    }, equals:function(a) {
+        if(this.$size === a.$size) {
+            for(var b = this.iterator(), a = a.iterator(), c = this.$size;0 < c--;) {
+                if(!Kotlin.equals(b.next(), a.next())) {
+                    return!1
                 }
             }
-        };
-        var println = function (obj) {
-            this.print(obj);
-            output += "\n";
-        };
-
-        return {
-            out:function () {
-                return {
-                    print:print,
-                    println:println
-                };
-            },
-            output:function () {
-                return output;
-            },
-            flush:function () {
-                output = "";
+        }
+        return!0
+    }, toString:function() {
+        for(var a = "[", b = this.iterator(), c = !0, d = this.$size;0 < d--;) {
+            c ? c = !1 : a += ", ", a += b.next()
+        }
+        return a + "]"
+    }, toJSON:function() {
+        return this.toArray()
+    }});
+    Kotlin.ArrayList = Kotlin.$createClass(Kotlin.AbstractList, {initialize:function() {
+        this.array = [];
+        this.$size = 0
+    }, get:function(a) {
+        if(0 > a || a >= this.$size) {
+            throw Kotlin.IndexOutOfBounds;
+        }
+        return this.array[a]
+    }, set:function(a, b) {
+        if(0 > a || a >= this.$size) {
+            throw Kotlin.IndexOutOfBounds;
+        }
+        this.array[a] = b
+    }, toArray:function() {
+        return this.array.slice(0, this.$size)
+    }, size:function() {
+        return this.$size
+    }, iterator:function() {
+        return Kotlin.arrayIterator(this.array)
+    }, add:function(a) {
+        this.array[this.$size++] = a
+    }, addAt:function(a, b) {
+        this.array.splice(a, 0, b);
+        this.$size++
+    }, addAll:function(a) {
+        for(var b = a.iterator(), c = this.$size, d = a.size();0 < d--;) {
+            this.array[c++] = b.next()
+        }
+        this.$size += a.size()
+    }, removeAt:function(a) {
+        this.array.splice(a, 1);
+        this.$size--
+    }, clear:function() {
+        this.$size = this.array.length = 0
+    }, indexOf:function(a) {
+        for(var b = 0, c = this.$size;b < c;++b) {
+            if(Kotlin.equals(this.array[b], a)) {
+                return b
             }
+        }
+        return-1
+    }, toString:function() {
+        return"[" + this.array.join(", ") + "]"
+    }, toJSON:function() {
+        return this.array
+    }});
+    Kotlin.Runnable = Kotlin.$createClass({initialize:function() {
+    }, run:e("Runnable#run")});
+    Kotlin.Comparable = Kotlin.$createClass({initialize:function() {
+    }, compareTo:e("Comparable#compareTo")});
+    Kotlin.Appendable = Kotlin.$createClass({initialize:function() {
+    }, append:e("Appendable#append")});
+    Kotlin.Closeable = Kotlin.$createClass({initialize:function() {
+    }, close:e("Closeable#close")});
+    Kotlin.parseInt = function(a) {
+        return parseInt(a, 10)
+    };
+    Kotlin.safeParseInt = function(a) {
+        a = parseInt(a, 10);
+        return isNaN(a) ? null : a
+    };
+    Kotlin.safeParseDouble = function(a) {
+        a = parseFloat(a);
+        return isNaN(a) ? null : a
+    };
+    Kotlin.System = function() {
+        var a = "", b = function(b) {
+            void 0 !== b && (a = null === b || "object" !== typeof b ? a + b : a + b.toString())
+        }, c = function(b) {
+            this.print(b);
+            a += "\n"
         };
+        return{out:function() {
+            return{print:b, println:c}
+        }, output:function() {
+            return a
+        }, flush:function() {
+            a = ""
+        }}
     }();
-
-    Kotlin.println = function (s) {
-        Kotlin.System.out().println(s);
+    Kotlin.println = function(a) {
+        Kotlin.System.out().println(a)
     };
-
-    Kotlin.print = function (s) {
-        Kotlin.System.out().print(s);
+    Kotlin.print = function(a) {
+        Kotlin.System.out().print(a)
     };
-
-    Kotlin.AbstractFunctionInvocationError = Kotlin.$createClass();
-
-    Kotlin.Iterator = Kotlin.$createClass({
-        initialize:function () {
-        },
-        next:function () {
-            throw Kotlin.$new(Kotlin.AbstractFunctionInvocationError)();
-        },
-        get_hasNext:function () {
-            throw Kotlin.$new(Kotlin.AbstractFunctionInvocationError)();
+    Kotlin.RangeIterator = Kotlin.$createClass(Kotlin.Iterator, {initialize:function(a, b, c) {
+        this.$start = a;
+        this.$count = b;
+        this.$reversed = c;
+        this.$i = this.get_start()
+    }, get_start:function() {
+        return this.$start
+    }, get_count:function() {
+        return this.$count
+    }, set_count:function(a) {
+        this.$count = a
+    }, get_reversed:function() {
+        return this.$reversed
+    }, get_i:function() {
+        return this.$i
+    }, set_i:function(a) {
+        this.$i = a
+    }, next:function() {
+        this.set_count(this.get_count() - 1);
+        if(this.get_reversed()) {
+            return this.set_i(this.get_i() - 1), this.get_i() + 1
         }
-    });
-
-    Kotlin.ArrayIterator = Kotlin.$createClass(Kotlin.Iterator, {
-        initialize: function (array) {
-            this.array = array;
-            this.index = 0;
-        },
-        next: function () {
-            return this.array.get(this.index++);
-        },
-        get_hasNext: function () {
-            return this.array.size() > this.index;
-        }
-    });
-
-    Kotlin.RangeIterator = Kotlin.$createClass(Kotlin.Iterator, {
-        initialize:function (start, count, reversed) {
-            this.$start = start;
-            this.$count = count;
-            this.$reversed = reversed;
-            this.$i = this.get_start();
-        }, get_start:function () {
-            return this.$start;
-        }, get_count:function () {
-            return this.$count;
-        }, set_count:function (tmp$0) {
-            this.$count = tmp$0;
-        }, get_reversed:function () {
-            return this.$reversed;
-        }, get_i:function () {
-            return this.$i;
-        }, set_i:function (tmp$0) {
-            this.$i = tmp$0;
-        }, next:function () {
-            this.set_count(this.get_count() - 1);
-            if (this.get_reversed()) {
-                this.set_i(this.get_i() - 1);
-                return this.get_i() + 1;
-            }
-            else {
-                this.set_i(this.get_i() + 1);
-                return this.get_i() - 1;
-            }
-        },
-        get_hasNext: function () {
-            return this.get_count() > 0;
-        }
-    });
-
-    Kotlin.NumberRange = Kotlin.$createClass({initialize:function (start, size, reversed) {
-        this.$start = start;
-        this.$size = size;
-        this.$reversed = reversed;
-    }, get_start:function () {
-        return this.$start;
-    }, get_size:function () {
-        return this.$size;
-    }, get_reversed:function () {
-        return this.$reversed;
-    }, get_end:function () {
-        return this.get_reversed() ? this.get_start() - this.get_size() + 1 : this.get_start() + this.get_size() - 1;
-    }, contains:function (number) {
-        if (this.get_reversed()) {
-            return number <= this.get_start() && number > this.get_start() - this.get_size();
-        }
-        else {
-            return number >= this.get_start() && number < this.get_start() + this.get_size();
-        }
-    }, iterator:function () {
-        return Kotlin.$new(Kotlin.RangeIterator)(this.get_start(), this.get_size(), this.get_reversed());
-    }
-    });
-
-    Kotlin.Comparator = Kotlin.$createClass(
-        {
-            initialize: function () {
-            },
-            compare: function (el1, el2) {
-                throw Kotlin.$new(Kotlin.AbstractFunctionInvocationError)();
-            }
-        }
-    );
-
-    Kotlin.comparator = function (f) {
-        var result = Kotlin.$new(Kotlin.Comparator)();
-        result.compare = f;
-        return result;
+        this.set_i(this.get_i() + 1);
+        return this.get_i() - 1
+    }, get_hasNext:function() {
+        return 0 < this.get_count()
+    }});
+    Kotlin.NumberRange = Kotlin.$createClass({initialize:function(a, b, c) {
+        this.$start = a;
+        this.$size = b;
+        this.$reversed = c
+    }, get_start:function() {
+        return this.$start
+    }, get_size:function() {
+        return this.$size
+    }, get_reversed:function() {
+        return this.$reversed
+    }, get_end:function() {
+        return this.get_reversed() ? this.get_start() - this.get_size() + 1 : this.get_start() + this.get_size() - 1
+    }, contains:function(a) {
+        return this.get_reversed() ? a <= this.get_start() && a > this.get_start() - this.get_size() : a >= this.get_start() && a < this.get_start() + this.get_size()
+    }, iterator:function() {
+        return Kotlin.$new(Kotlin.RangeIterator)(this.get_start(), this.get_size(), this.get_reversed())
+    }});
+    Kotlin.Comparator = Kotlin.$createClass({initialize:function() {
+    }, compare:e("Comparator#compare")});
+    var d = Kotlin.$createClass(Kotlin.Comparator, {initialize:function(a) {
+        this.compare = a
+    }});
+    Kotlin.comparator = function(a) {
+        return Kotlin.$new(d)(a)
     };
-
-    Kotlin.collectionsMax = function (col, comp) {
-        var it = col.iterator();
-        if (col.isEmpty()) {
-            //TODO: which exception?
+    Kotlin.collectionsMax = function(a, b) {
+        var c = a.iterator();
+        if(a.isEmpty()) {
             throw Kotlin.Exception();
         }
-        var max = it.next();
-        while (it.get_hasNext()) {
-            var el = it.next();
-            if (comp.compare(max, el) < 0) {
-                max = el;
-            }
+        for(var d = c.next();c.get_hasNext();) {
+            var e = c.next();
+            0 > b.compare(d, e) && (d = e)
         }
-        return max;
+        return d
     };
-
-    Kotlin.StringBuilder = Kotlin.$createClass(
-            {
-                initialize:function () {
-                    this.string = "";
-                },
-                append:function (obj) {
-                    this.string = this.string + obj.toString();
-                },
-                toString:function () {
-                    return this.string;
-                }
-            }
-    );
-
-    Kotlin.splitString = function (str, regex) {
-        return str.split(regex);
+    Kotlin.StringBuilder = Kotlin.$createClass({initialize:function() {
+        this.string = ""
+    }, append:function(a) {
+        this.string += a.toString()
+    }, toString:function() {
+        return this.string
+    }});
+    Kotlin.splitString = function(a, b) {
+        return a.split(b)
     };
-
-    Kotlin.nullArray = function (size) {
-        var res = [];
-        var i = size;
-        while (i > 0) {
-            res[--i] = null;
+    Kotlin.nullArray = function(a) {
+        for(var b = [];0 < a;) {
+            b[--a] = null
         }
-        return res;
+        return b
     };
-
-    Kotlin.arrayFromFun = function (size, initFun) {
-        var res = [];
-        var i = size;
-        while (i > 0) {
-            res[--i] = initFun(i);
+    Kotlin.arrayFromFun = function(a, b) {
+        for(var c = Array(a), d = 0;d < a;d++) {
+            c[d] = b(d)
         }
-        return res;
+        return c
     };
-
-    Kotlin.arrayIndices = function (arr) {
-        return Kotlin.$new(Kotlin.NumberRange)(0, arr.length);
+    Kotlin.arrayIndices = function(a) {
+        return Kotlin.$new(Kotlin.NumberRange)(0, a.length)
     };
-
-    var intrinsicArrayIterator = Kotlin.$createClass(
-        Kotlin.Iterator,
-        {
-            initialize: function (arr) {
-                this.arr = arr;
-                this.len = arr.length;
-                this.i = 0;
-            },
-            next: function () {
-                return this.arr[this.i++];
-            },
-            get_hasNext: function () {
-                return this.i < this.len;
-            }
-        }
-    );
-
-    Kotlin.arrayIterator = function (arr) {
-        return Kotlin.$new(intrinsicArrayIterator)(arr);
+    Kotlin.arrayIterator = function(a) {
+        return Kotlin.$new(f)(a)
     };
-
-    Kotlin.toString = function (obj) {
-        return obj.toString();
+    Kotlin.toString = function(a) {
+        return a.toString()
     };
-
-    Kotlin.jsonFromTuples = function (pairArr) {
-        var i = pairArr.length;
-        var res = {};
-        while (i > 0) {
-            --i;
-            res[pairArr[i][0]] = pairArr[i][1];
+    Kotlin.jsonFromTuples = function(a) {
+        for(var b = a.length, c = {};0 < b;) {
+            --b, c[a[b][0]] = a[b][1]
         }
-        return res;
+        return c
     };
-
-    //TODO: use intrinsic
-    Kotlin.jsonSet = function (obj, attrName, value) {
-        obj[attrName] = value;
+    Kotlin.jsonSet = function(a, b, c) {
+        a[b] = c
     };
-
-    Kotlin.jsonGet = function (obj, attrName) {
-        return obj[attrName];
+    Kotlin.jsonGet = function(a, b) {
+        return a[b]
     };
-
-
-    Kotlin.jsonAddProperties = function (obj1, obj2) {
-        for (var p in obj2) {
-            if (obj2.hasOwnProperty(p)) {
-                obj1[p] = obj2[p];
-            }
+    Kotlin.jsonAddProperties = function(a, b) {
+        for(var c in b) {
+            b.hasOwnProperty(c) && (a[c] = b[c])
         }
-        return obj1;
+        return a
     };
-
-    //TODO: use intrinsic
-    Kotlin.sure = function (obj) {
-        return obj;
+    Kotlin.sure = function(a) {
+        return a
     };
-
-    (function () {
-        var FUNCTION = "function";
-
-        var arrayRemoveAt = (typeof Array.prototype.splice == FUNCTION) ?
-                function (arr, idx) {
-                    arr.splice(idx, 1);
-                } :
-
-                function (arr, idx) {
-                    var itemsAfterDeleted, i, len;
-                    if (idx === arr.length - 1) {
-                        arr.length = idx;
-                    }
-                    else {
-                        itemsAfterDeleted = arr.slice(idx + 1);
-                        arr.length = idx;
-                        for (i = 0, len = itemsAfterDeleted.length; i < len; ++i) {
-                            arr[idx + i] = itemsAfterDeleted[i];
-                        }
-                    }
-                };
-
-        function hashObject(obj) {
-            var hashCode;
-            if (typeof obj == "string") {
-                return obj;
-            } else if (typeof obj.hashCode == FUNCTION) {
-                // Check the hashCode method really has returned a string
-                hashCode = obj.hashCode();
-                return (typeof hashCode == "string") ? hashCode : hashObject(hashCode);
-            } else if (typeof obj.toString == FUNCTION) {
-                return obj.toString();
-            }
-            else {
-                try {
-                    return String(obj);
-                } catch (ex) {
-                    // For host objects (such as ActiveObjects in IE) that have no toString() method and throw an error when
-                    // passed to String()
-                    return Object.prototype.toString.call(obj);
-                }
-            }
+    Kotlin.concat = function(a, b) {
+        for(var c = Array(a.length + b.length), d = 0, e = a.length;d < e;d++) {
+            c[d] = a[d]
         }
-
-        function equals_fixedValueHasEquals(fixedValue, variableValue) {
-            return fixedValue.equals(variableValue);
+        for(var e = b.length, f = 0;f < e;) {
+            c[d++] = b[f++]
         }
-
-        function equals_fixedValueNoEquals(fixedValue, variableValue) {
-            return (typeof variableValue.equals == FUNCTION) ?
-                    variableValue.equals(fixedValue) : (fixedValue === variableValue);
-        }
-
-        function createKeyValCheck(kvStr) {
-            return function (kv) {
-                if (kv === null) {
-                    throw new Error("null is not a valid " + kvStr);
-                } else if (typeof kv == "undefined") {
-                    throw new Error(kvStr + " must not be undefined");
-                }
-            };
-        }
-
-        var checkKey = createKeyValCheck("key"), checkValue = createKeyValCheck("value");
-
-        /*----------------------------------------------------------------------------------------------------------------*/
-
-        function Bucket(hash, firstKey, firstValue, equalityFunction) {
-            this[0] = hash;
-            this.entries = [];
-            this.addEntry(firstKey, firstValue);
-
-            if (equalityFunction !== null) {
-                this.getEqualityFunction = function () {
-                    return equalityFunction;
-                };
-            }
-        }
-
-        var EXISTENCE = 0, ENTRY = 1, ENTRY_INDEX_AND_VALUE = 2;
-
-        function createBucketSearcher(mode) {
-            return function (key) {
-                var i = this.entries.length, entry, equals = this.getEqualityFunction(key);
-                while (i--) {
-                    entry = this.entries[i];
-                    if (equals(key, entry[0])) {
-                        switch (mode) {
-                            case EXISTENCE:
-                                return true;
-                            case ENTRY:
-                                return entry;
-                            case ENTRY_INDEX_AND_VALUE:
-                                return [ i, entry[1] ];
-                        }
-                    }
-                }
-                return false;
-            };
-        }
-
-        function createBucketLister(entryProperty) {
-            return function (aggregatedArr) {
-                var startIndex = aggregatedArr.length;
-                for (var i = 0, len = this.entries.length; i < len; ++i) {
-                    aggregatedArr[startIndex + i] = this.entries[i][entryProperty];
-                }
-            };
-        }
-
-        Bucket.prototype = {
-            getEqualityFunction:function (searchValue) {
-                return (typeof searchValue.equals == FUNCTION) ? equals_fixedValueHasEquals : equals_fixedValueNoEquals;
-            },
-
-            getEntryForKey:createBucketSearcher(ENTRY),
-
-            getEntryAndIndexForKey:createBucketSearcher(ENTRY_INDEX_AND_VALUE),
-
-            removeEntryForKey:function (key) {
-                var result = this.getEntryAndIndexForKey(key);
-                if (result) {
-                    arrayRemoveAt(this.entries, result[0]);
-                    return result[1];
-                }
-                return null;
-            },
-
-            addEntry:function (key, value) {
-                this.entries[this.entries.length] = [key, value];
-            },
-
-            keys:createBucketLister(0),
-
-            values:createBucketLister(1),
-
-            getEntries:function (entries) {
-                var startIndex = entries.length;
-                for (var i = 0, len = this.entries.length; i < len; ++i) {
-                    // Clone the entry stored in the bucket before adding to array
-                    entries[startIndex + i] = this.entries[i].slice(0);
-                }
-            },
-
-            containsKey:createBucketSearcher(EXISTENCE),
-
-            containsValue:function (value) {
-                var i = this.entries.length;
-                while (i--) {
-                    if (value === this.entries[i][1]) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        };
-
-        /*----------------------------------------------------------------------------------------------------------------*/
-
-        // Supporting functions for searching hashtable buckets
-
-        function searchBuckets(buckets, hash) {
-            var i = buckets.length, bucket;
-            while (i--) {
-                bucket = buckets[i];
-                if (hash === bucket[0]) {
-                    return i;
-                }
-            }
-            return null;
-        }
-
-        function getBucketForHash(bucketsByHash, hash) {
-            var bucket = bucketsByHash[hash];
-
-            // Check that this is a genuine bucket and not something inherited from the bucketsByHash's prototype
-            return ( bucket && (bucket instanceof Bucket) ) ? bucket : null;
-        }
-
-        /*----------------------------------------------------------------------------------------------------------------*/
-
-        var Hashtable = function (hashingFunctionParam, equalityFunctionParam) {
-            var that = this;
-            var buckets = [];
-            var bucketsByHash = {};
-
-            var hashingFunction = (typeof hashingFunctionParam == FUNCTION) ? hashingFunctionParam : hashObject;
-            var equalityFunction = (typeof equalityFunctionParam == FUNCTION) ? equalityFunctionParam : null;
-
-            this.put = function (key, value) {
-                checkKey(key);
-                checkValue(value);
-                var hash = hashingFunction(key), bucket, bucketEntry, oldValue = null;
-
-                // Check if a bucket exists for the bucket key
-                bucket = getBucketForHash(bucketsByHash, hash);
-                if (bucket) {
-                    // Check this bucket to see if it already contains this key
-                    bucketEntry = bucket.getEntryForKey(key);
-                    if (bucketEntry) {
-                        // This bucket entry is the current mapping of key to value, so replace old value and we're done.
-                        oldValue = bucketEntry[1];
-                        bucketEntry[1] = value;
-                    }
-                    else {
-                        // The bucket does not contain an entry for this key, so add one
-                        bucket.addEntry(key, value);
-                    }
-                }
-                else {
-                    // No bucket exists for the key, so create one and put our key/value mapping in
-                    bucket = new Bucket(hash, key, value, equalityFunction);
-                    buckets[buckets.length] = bucket;
-                    bucketsByHash[hash] = bucket;
-                }
-                return oldValue;
-            };
-
-            this.get = function (key) {
-                checkKey(key);
-
-                var hash = hashingFunction(key);
-
-                // Check if a bucket exists for the bucket key
-                var bucket = getBucketForHash(bucketsByHash, hash);
-                if (bucket) {
-                    // Check this bucket to see if it contains this key
-                    var bucketEntry = bucket.getEntryForKey(key);
-                    if (bucketEntry) {
-                        // This bucket entry is the current mapping of key to value, so return the value.
-                        return bucketEntry[1];
-                    }
-                }
-                return null;
-            };
-
-            this.containsKey = function (key) {
-                checkKey(key);
-                var bucketKey = hashingFunction(key);
-
-                // Check if a bucket exists for the bucket key
-                var bucket = getBucketForHash(bucketsByHash, bucketKey);
-
-                return bucket ? bucket.containsKey(key) : false;
-            };
-
-            this.containsValue = function (value) {
-                checkValue(value);
-                var i = buckets.length;
-                while (i--) {
-                    if (buckets[i].containsValue(value)) {
-                        return true;
-                    }
-                }
-                return false;
-            };
-
-            this.clear = function () {
-                buckets.length = 0;
-                bucketsByHash = {};
-            };
-
-            this.isEmpty = function () {
-                return !buckets.length;
-            };
-
-            var createBucketAggregator = function (bucketFuncName) {
-                return function () {
-                    var aggregated = [], i = buckets.length;
-                    while (i--) {
-                        buckets[i][bucketFuncName](aggregated);
-                    }
-                    return aggregated;
-                };
-            };
-
-            this._keys = createBucketAggregator("keys");
-            this._values = createBucketAggregator("values");
-            this._entries = createBucketAggregator("getEntries");
-
-            this.values = function() {
-                var values = this._values();
-                var i = values.length
-                var result = Kotlin.$new(Kotlin.ArrayList)();
-                while (--i) {
-                    result.add(values[i]);
-                }
-                return result;
-            };
-
-            this.remove = function (key) {
-                checkKey(key);
-
-                var hash = hashingFunction(key), bucketIndex, oldValue = null;
-
-                // Check if a bucket exists for the bucket key
-                var bucket = getBucketForHash(bucketsByHash, hash);
-
-                if (bucket) {
-                    // Remove entry from this bucket for this key
-                    oldValue = bucket.removeEntryForKey(key);
-                    if (oldValue !== null) {
-                        // Entry was removed, so check if bucket is empty
-                        if (!bucket.entries.length) {
-                            // Bucket is empty, so remove it from the bucket collections
-                            bucketIndex = searchBuckets(buckets, hash);
-                            arrayRemoveAt(buckets, bucketIndex);
-                            delete bucketsByHash[hash];
-                        }
-                    }
-                }
-                return oldValue;
-            };
-
-            this.size = function () {
-                var total = 0, i = buckets.length;
-                while (i--) {
-                    total += buckets[i].entries.length;
-                }
-                return total;
-            };
-
-            this.each = function (callback) {
-                var entries = that.entries(), i = entries.length, entry;
-                while (i--) {
-                    entry = entries[i];
-                    callback(entry[0], entry[1]);
-                }
-            };
-
-
-            this.putAll = function (hashtable, conflictCallback) {
-                var entries = hashtable.entries();
-                var entry, key, value, thisValue, i = entries.length;
-                var hasConflictCallback = (typeof conflictCallback == FUNCTION);
-                while (i--) {
-                    entry = entries[i];
-                    key = entry[0];
-                    value = entry[1];
-
-                    // Check for a conflict. The default behaviour is to overwrite the value for an existing key
-                    if (hasConflictCallback && (thisValue = that.get(key))) {
-                        value = conflictCallback(key, thisValue, value);
-                    }
-                    that.put(key, value);
-                }
-            };
-
-            this.clone = function () {
-                var clone = new Hashtable(hashingFunctionParam, equalityFunctionParam);
-                clone.putAll(that);
-                return clone;
-            };
-
-            this.keySet = function () {
-                var res = Kotlin.$new(Kotlin.HashSet)();
-                var keys = this._keys();
-                var i = keys.length;
-                while (i--) {
-                    res.add(keys[i]);
-                }
-                return res;
-            };
-        };
-
-        Kotlin.HashTable = Hashtable;
-    })();
-
-    Kotlin.HashMap = Kotlin.$createClass(
-            {
-                initialize:function () {
-                    Kotlin.HashTable.call(this);
-                }
-            }
-    );
-
-
-    (function () {
-        function HashSet(hashingFunction, equalityFunction) {
-            var hashTable = new Kotlin.HashTable(hashingFunction, equalityFunction);
-
-            this.add = function (o) {
-                hashTable.put(o, true);
-            };
-
-            this.addAll = function (arr) {
-                var i = arr.length;
-                while (i--) {
-                    hashTable.put(arr[i], true);
-                }
-            };
-
-            this.values = function () {
-                return hashTable._keys();
-            };
-
-            this.iterator = function () {
-                return Kotlin.arrayIterator(this.values());
-            };
-
-            this.remove = function (o) {
-                return hashTable.remove(o) ? o : null;
-            };
-
-            this.contains = function (o) {
-                return hashTable.containsKey(o);
-            };
-
-            this.clear = function () {
-                hashTable.clear();
-            };
-
-            this.size = function () {
-                return hashTable.size();
-            };
-
-            this.isEmpty = function () {
-                return hashTable.isEmpty();
-            };
-
-            this.clone = function () {
-                var h = new HashSet(hashingFunction, equalityFunction);
-                h.addAll(hashTable.keys());
-                return h;
-            };
-
-            this.intersection = function (hashSet) {
-                var intersection = new HashSet(hashingFunction, equalityFunction);
-                var values = hashSet.values(), i = values.length, val;
-                while (i--) {
-                    val = values[i];
-                    if (hashTable.containsKey(val)) {
-                        intersection.add(val);
-                    }
-                }
-                return intersection;
-            };
-
-            this.union = function (hashSet) {
-                var union = this.clone();
-                var values = hashSet.values(), i = values.length, val;
-                while (i--) {
-                    val = values[i];
-                    if (!hashTable.containsKey(val)) {
-                        union.add(val);
-                    }
-                }
-                return union;
-            };
-
-            this.isSubsetOf = function (hashSet) {
-                var values = hashTable.keys(), i = values.length;
-                while (i--) {
-                    if (!hashSet.contains(values[i])) {
-                        return false;
-                    }
-                }
-                return true;
-            };
-        }
-
-        Kotlin.HashSet = Kotlin.$createClass({initialize: function () {
-            HashSet.call(this);
-        }});
-    }());
+        return c
+    }
 })();
+Kotlin.assignOwner = function(e, f) {
+    e.o = f;
+    return e
+};
+Kotlin.b0 = function(e, f, c) {
+    return function() {
+        return e.call(null !== f ? f : this, c)
+    }
+};
+Kotlin.b1 = function(e, f, c) {
+    return function() {
+        return e.apply(null !== f ? f : this, c)
+    }
+};
+Kotlin.b2 = function(e, f, c) {
+    return function() {
+        return e.apply(null !== f ? f : this, Kotlin.concat(c, arguments))
+    }
+};
+Kotlin.b3 = function(e, f) {
+    return function() {
+        return e.call(f)
+    }
+};
+Kotlin.b4 = function(e, f) {
+    return function() {
+        return e.apply(f, Kotlin.argumentsToArrayLike(arguments))
+    }
+};
+(function() {
+    function e(a) {
+        return"string" == typeof a ? a : typeof a.hashCode == i ? (a = a.hashCode(), "string" == typeof a ? a : e(a)) : typeof a.toString == i ? a.toString() : "" + a
+    }
+    function f(a, b) {
+        return a.equals(b)
+    }
+    function c(a, b) {
+        return typeof b.equals == i ? b.equals(a) : a === b
+    }
+    function d(a) {
+        return function(b) {
+            if(null === b) {
+                throw Error("null is not a valid " + a);
+            }
+            if("undefined" == typeof b) {
+                throw Error(a + " must not be undefined");
+            }
+        }
+    }
+    function a(a, b, c, d) {
+        this[0] = a;
+        this.entries = [];
+        this.addEntry(b, c);
+        null !== d && (this.getEqualityFunction = function() {
+            return d
+        })
+    }
+    function b(a) {
+        return function(b) {
+            for(var c = this.entries.length, d, e = this.getEqualityFunction(b);c--;) {
+                if(d = this.entries[c], e(b, d[0])) {
+                    switch(a) {
+                        case j:
+                            return!0;
+                        case o:
+                            return d;
+                        case p:
+                            return[c, d[1]]
+                    }
+                }
+            }
+            return!1
+        }
+    }
+    function g(a) {
+        return function(b) {
+            for(var c = b.length, d = 0, e = this.entries.length;d < e;++d) {
+                b[c + d] = this.entries[d][a]
+            }
+        }
+    }
+    function h(b, c) {
+        var d = b[c];
+        return d && d instanceof a ? d : null
+    }
+    var i = "function", n = typeof Array.prototype.splice == i ? function(a, b) {
+        a.splice(b, 1)
+    } : function(a, b) {
+        var c, d, e;
+        if(b === a.length - 1) {
+            a.length = b
+        }else {
+            c = a.slice(b + 1);
+            a.length = b;
+            d = 0;
+            for(e = c.length;d < e;++d) {
+                a[b + d] = c[d]
+            }
+        }
+    }, k = d("key"), q = d("value"), j = 0, o = 1, p = 2;
+    a.prototype = {getEqualityFunction:function(a) {
+        return typeof a.equals == i ? f : c
+    }, getEntryForKey:b(o), getEntryAndIndexForKey:b(p), removeEntryForKey:function(a) {
+        return(a = this.getEntryAndIndexForKey(a)) ? (n(this.entries, a[0]), a[1]) : null
+    }, addEntry:function(a, b) {
+        this.entries[this.entries.length] = [a, b]
+    }, keys:g(0), values:g(1), getEntries:function(a) {
+        for(var b = a.length, c = 0, d = this.entries.length;c < d;++c) {
+            a[b + c] = this.entries[c].slice(0)
+        }
+    }, containsKey:b(j), containsValue:function(a) {
+        for(var b = this.entries.length;b--;) {
+            if(a === this.entries[b][1]) {
+                return!0
+            }
+        }
+        return!1
+    }};
+    var r = function(b, c) {
+        var d = this, f = [], g = {}, l = typeof b == i ? b : e, j = typeof c == i ? c : null;
+        this.put = function(b, c) {
+            k(b);
+            q(c);
+            var d = l(b), e, i = null;
+            (e = h(g, d)) ? (d = e.getEntryForKey(b)) ? (i = d[1], d[1] = c) : e.addEntry(b, c) : (e = new a(d, b, c, j), f[f.length] = e, g[d] = e);
+            return i
+        };
+        this.get = function(a) {
+            k(a);
+            var b = l(a);
+            if(b = h(g, b)) {
+                if(a = b.getEntryForKey(a)) {
+                    return a[1]
+                }
+            }
+            return null
+        };
+        this.containsKey = function(a) {
+            k(a);
+            var b = l(a);
+            return(b = h(g, b)) ? b.containsKey(a) : !1
+        };
+        this.containsValue = function(a) {
+            q(a);
+            for(var b = f.length;b--;) {
+                if(f[b].containsValue(a)) {
+                    return!0
+                }
+            }
+            return!1
+        };
+        this.clear = function() {
+            f.length = 0;
+            g = {}
+        };
+        this.isEmpty = function() {
+            return!f.length
+        };
+        var m = function(a) {
+            return function() {
+                for(var b = [], c = f.length;c--;) {
+                    f[c][a](b)
+                }
+                return b
+            }
+        };
+        this._keys = m("keys");
+        this._values = m("values");
+        this._entries = m("getEntries");
+        this.values = function() {
+            for(var a = this._values(), b = a.length, c = Kotlin.$new(Kotlin.ArrayList)();--b;) {
+                c.add(a[b])
+            }
+            return c
+        };
+        this.remove = function(a) {
+            k(a);
+            var b = l(a), c = null, d = h(g, b);
+            if(d && (c = d.removeEntryForKey(a), null !== c && !d.entries.length)) {
+                a: {
+                    for(a = f.length;a--;) {
+                        if(d = f[a], b === d[0]) {
+                            break a
+                        }
+                    }
+                    a = null
+                }
+                n(f, a);
+                delete g[b]
+            }
+            return c
+        };
+        this.size = function() {
+            for(var a = 0, b = f.length;b--;) {
+                a += f[b].entries.length
+            }
+            return a
+        };
+        this.each = function(a) {
+            for(var b = d.entries(), c = b.length, e;c--;) {
+                e = b[c], a(e[0], e[1])
+            }
+        };
+        this.putAll = function(a, b) {
+            for(var c = a.entries(), e, f, g, h = c.length, j = typeof b == i;h--;) {
+                e = c[h];
+                f = e[0];
+                e = e[1];
+                if(j && (g = d.get(f))) {
+                    e = b(f, g, e)
+                }
+                d.put(f, e)
+            }
+        };
+        this.clone = function() {
+            var a = new r(b, c);
+            a.putAll(d);
+            return a
+        };
+        this.keySet = function() {
+            for(var a = Kotlin.$new(Kotlin.HashSet)(), b = this._keys(), c = b.length;c--;) {
+                a.add(b[c])
+            }
+            return a
+        }
+    };
+    Kotlin.HashTable = r
+})();
+Kotlin.Map = Kotlin.$createClass();
+Kotlin.HashMap = Kotlin.$createClass(Kotlin.Map, {initialize:function() {
+    Kotlin.HashTable.call(this)
+}});
+Kotlin.ComplexHashMap = Kotlin.HashMap;
+(function() {
+    var e = Kotlin.$createClass(Kotlin.Iterator, {initialize:function(c, d) {
+        this.map = c;
+        this.keys = d;
+        this.size = d.length;
+        this.index = 0
+    }, next:function() {
+        return this.map[this.keys[this.index++]]
+    }, get_hasNext:function() {
+        return this.index < this.size
+    }}), f = Kotlin.$createClass(Kotlin.Collection, {initialize:function(c) {
+        this.map = c
+    }, iterator:function() {
+        return Kotlin.$new(e)(this.map.map, Kotlin.keys(this.map.map))
+    }, isEmpty:function() {
+        return 0 === this.map.$size
+    }, contains:function(c) {
+        return this.map.containsValue(c)
+    }});
+    Kotlin.PrimitiveHashMap = Kotlin.$createClass(Kotlin.Map, {initialize:function() {
+        this.$size = 0;
+        this.map = {}
+    }, size:function() {
+        return this.$size
+    }, isEmpty:function() {
+        return 0 === this.$size
+    }, containsKey:function(c) {
+        return void 0 !== this.map[c]
+    }, containsValue:function(c) {
+        var d = this.map, a;
+        for(a in d) {
+            if(d.hasOwnProperty(a) && d[a] === c) {
+                return!0
+            }
+        }
+        return!1
+    }, get:function(c) {
+        return this.map[c]
+    }, put:function(c, d) {
+        var a = this.map[c];
+        this.map[c] = void 0 === d ? null : d;
+        void 0 === a && this.$size++;
+        return a
+    }, remove:function(c) {
+        var d = this.map[c];
+        void 0 !== d && (delete this.map[c], this.$size--);
+        return d
+    }, clear:function() {
+        this.$size = 0;
+        this.map = {}
+    }, putAll:function() {
+        throw Kotlin.$new(Kotlin.UnsupportedOperationException)();
+    }, keySet:function() {
+        var c = Kotlin.$new(Kotlin.HashSet)(), d = this.map, a;
+        for(a in d) {
+            d.hasOwnProperty(a) && c.add(a)
+        }
+        return c
+    }, values:function() {
+        return Kotlin.$new(f)(this)
+    }, toJSON:function() {
+        return this.map
+    }})
+})();
+(function() {
+    function e(f, c) {
+        var d = new Kotlin.HashTable(f, c);
+        this.add = function(a) {
+            d.put(a, !0)
+        };
+        this.addAll = function(a) {
+            for(var b = a.length;b--;) {
+                d.put(a[b], !0)
+            }
+        };
+        this.values = function() {
+            return d._keys()
+        };
+        this.iterator = function() {
+            return Kotlin.arrayIterator(this.values())
+        };
+        this.remove = function(a) {
+            return d.remove(a) ? a : null
+        };
+        this.contains = function(a) {
+            return d.containsKey(a)
+        };
+        this.clear = function() {
+            d.clear()
+        };
+        this.size = function() {
+            return d.size()
+        };
+        this.isEmpty = function() {
+            return d.isEmpty()
+        };
+        this.clone = function() {
+            var a = new e(f, c);
+            a.addAll(d.keys());
+            return a
+        };
+        this.equals = function(a) {
+            if(null === a || void 0 === a) {
+                return!1
+            }
+            if(this.size() === a.size()) {
+                for(var b = this.iterator(), a = a.iterator();;) {
+                    var c = b.get_hasNext(), d = a.get_hasNext();
+                    if(c != d) {
+                        break
+                    }
+                    if(d) {
+                        if(c = b.next(), d = a.next(), !Kotlin.equals(c, d)) {
+                            break
+                        }
+                    }else {
+                        return!0
+                    }
+                }
+            }
+            return!1
+        };
+        this.toString = function() {
+            for(var a = "[", b = this.iterator(), c = !0;b.get_hasNext();) {
+                c ? c = !1 : a += ", ", a += b.next()
+            }
+            return a + "]"
+        };
+        this.intersection = function(a) {
+            for(var b = new e(f, c), a = a.values(), g = a.length, h;g--;) {
+                h = a[g], d.containsKey(h) && b.add(h)
+            }
+            return b
+        };
+        this.union = function(a) {
+            for(var b = this.clone(), a = a.values(), c = a.length, e;c--;) {
+                e = a[c], d.containsKey(e) || b.add(e)
+            }
+            return b
+        };
+        this.isSubsetOf = function(a) {
+            for(var b = d.keys(), c = b.length;c--;) {
+                if(!a.contains(b[c])) {
+                    return!1
+                }
+            }
+            return!0
+        }
+    }
+    Kotlin.HashSet = Kotlin.$createClass({initialize:function() {
+        e.call(this)
+    }})
+})();
+

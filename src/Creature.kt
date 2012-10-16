@@ -21,9 +21,10 @@ class Creature(override var pos: Vector, val state: CanvasState): Shape() {
     }
 
     fun CanvasContext.fillCircle(position: Vector, rad: Double) {
-        fillPath {
-            circlePath(position, rad)
-        }
+        beginPath()
+        circlePath(position, rad)
+        closePath()
+        fill()
     }
 
     override fun draw(state: CanvasState) {
@@ -37,10 +38,11 @@ class Creature(override var pos: Vector, val state: CanvasState): Shape() {
 
     fun drawCreature(context: CanvasContext) {
         context.fillStyle = getGradient(context)
-        context.fillPath {
-            tailPath(context)
-            circlePath(position, radius)
-        }
+        context.beginPath()
+        context.circlePath(position, radius)
+        tailPath(context)
+        context.closePath()
+        context.fill()
         drawEye(context)
     }
 
@@ -48,7 +50,7 @@ class Creature(override var pos: Vector, val state: CanvasState): Shape() {
         val gradientCentre = position + directionToLogo * (radius / 4)
         val gradient = context.createRadialGradient(gradientCentre.x, gradientCentre.y, 1.0, gradientCentre.x, gradientCentre.y, 2 * radius)!!
         for (colorStop in colorStops) {
-            gradient.addColorStop(colorStop._1, colorStop._2)
+            gradient.addColorStop(colorStop.first, colorStop.second)
         }
         return gradient
     }
@@ -78,13 +80,14 @@ class Creature(override var pos: Vector, val state: CanvasState): Shape() {
     }
 
     fun drawCreatureWithShadow(context: CanvasContext) {
-        context.shadowed(shadowOffset, 0.7) {
+//        context.shadowed(shadowOffset, 0.7) {
             context.fillStyle = getGradient(context)
-            fillPath {
-                tailPath(context)
-                context.circlePath(position, radius)
-            }
-        }
+            context.beginPath()
+            context.circlePath(position, radius)
+            tailPath(context)
+            context.closePath()
+            context.fill()
+//        }
         drawEye(context)
     }
 }
